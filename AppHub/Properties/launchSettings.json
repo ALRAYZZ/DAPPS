@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "AppHub (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "AppHub (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
