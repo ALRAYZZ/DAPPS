@@ -27,6 +27,8 @@
                         <Image Source="{Binding AppIcon}" Width="50" Height="50" Margin="5"/>
                         <TextBlock Text="{Binding AppName}" VerticalAlignment="Center" Margin="5"/>
                         <Button Content="Delete" Click="btnDeleteAppOnClick" Tag="{Binding AppPath}" Margin="5"/>
+                        <Button Content="Add/Change Icon" Click="btnAddChangeIconOnClick" Tag="{Binding AppPath}" Margin="5" />
+                        <Button Content="Rename" Click="btnRenameAppOnClick" Tag="{Binding AppPath}" Margin="5" />
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>

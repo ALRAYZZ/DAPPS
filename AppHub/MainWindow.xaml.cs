@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using AppHub.Models;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -14,6 +15,7 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Services.Maps;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
@@ -54,17 +56,23 @@ namespace AppHub
 
 				if (!appList.Any(a => a.AppPath == appPath))
 				{
-					var iconPicker = new FileOpenPicker();
-					InitializeWithWindow(iconPicker);
-					iconPicker.ViewMode = PickerViewMode.Thumbnail;
-					iconPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
-					iconPicker.FileTypeFilter.Add(".png");
-					iconPicker.FileTypeFilter.Add(".jpg");
-					iconPicker.FileTypeFilter.Add(".jpeg");
+					var dialog = new ContentDialog
+					{
+						Title = "Add App Icon",
+						Content = "Would you like to add an icon for this app?",
+						PrimaryButtonText = "Ok",
+						CloseButtonText = "Cancel",
+						XamlRoot = this.Content.XamlRoot
+					};
 
-					StorageFile iconFile = await iconPicker.PickSingleFileAsync();
-					string appIcon = iconFile != null ? iconFile.Path : "Assets/default_icon.png";
+					var result = await dialog.ShowAsync();
 
+					string appIcon = "Assets/default_icon.png";
+
+					if (result == ContentDialogResult.Primary)
+					{
+						appIcon = await AddAppIconAsync();
+					}
 
 					var app = new AppModel { AppName = appName, AppPath = appPath, AppIcon = appIcon };
 					appList.Add(app);
@@ -83,7 +91,6 @@ namespace AppHub
 				MessageBox("No app selected");
 			}
 		}
-
 		private void btnLaunchAppOnClick(object sender, RoutedEventArgs e)
 		{
 			if (listApps.SelectedItem != null)
@@ -112,73 +119,24 @@ namespace AppHub
 				MessageBox("Please select an app to launch");
 			}
 		}
-
-		private async void MessageBox(string message)
+		private async void btnAddChangeIconOnClick(object sender, RoutedEventArgs e)
 		{
-			var dialog = new ContentDialog
+			var button = sender as Button;
+			if (button != null)
 			{
-				Title = "Notification",
-				Content = message,
-				CloseButtonText = "Ok",
-				XamlRoot = this.Content.XamlRoot
-			};
-
-			await dialog.ShowAsync();
-		}
-		private void LoadAppsList()
-		{
-			string folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DAPPS");
-			string filePath = Path.Combine(folderPath, "apps.txt");
-
-			if (Directory.Exists(folderPath) && File.Exists(filePath))
-			{
-				using (StreamReader reader = new StreamReader(filePath))
+				string appPath = button.Tag as string; // This works because on the XAML we set the Tag property of the button to the app path Tag="{Binding AppPath}
+				var appToUpdate = appList.FirstOrDefault(a => a.AppPath == appPath);
+				if (appToUpdate != null)
 				{
-					while (!reader.EndOfStream) // Read the file line by line until the end of the file
-					{
-						string line = reader.ReadLine().Trim(); // Each line contains the path of an app
-						var parts = line.Split('|'); // The path is separated from the app name by a pipe character
-						if (parts.Length >= 2)
-						{
-							string appName = parts[0];
-							string appPath = parts[1];
-							string appIcon = (parts.Length == 3 && !string.IsNullOrEmpty(parts[2])) ? parts[2] : "Assets/default_icon.png";
-
-							var app = new AppModel { AppName = appName, AppPath = appPath, AppIcon = appIcon };
-							if (File.Exists(app.AppPath))
-							{
-								appList.Add(app);
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				Directory.CreateDirectory(folderPath);
-			}
-			listApps.ItemsSource = null;
-			listApps.ItemsSource = appList;
-		}
-		private void SaveAppsList()
-		{
-			string folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DAPPS");
-			string filePath = Path.Combine(folderPath, "apps.txt");
-
-			if (!Directory.Exists(folderPath))
-			{
-				Directory.CreateDirectory(folderPath);
-			}
-
-			using (StreamWriter writer = new StreamWriter(filePath))
-			{
-				foreach (var app in appList)
-				{
-					writer.WriteLine($"{app.AppName}|{app.AppPath}|{app.AppIcon}");
+					string newIconPath = await AddAppIconAsync();
+					appToUpdate.AppIcon = newIconPath;
+					listApps.ItemsSource = null; // Refresh the list
+					listApps.ItemsSource = appList;
+					SaveAppsList();
+					MessageBox("App icon updated successfully");
 				}
 			}
 		}
-
 		private void btnDeleteAppOnClick(object sender, RoutedEventArgs e)
 		{
 			var button = sender as Button;
@@ -196,12 +154,131 @@ namespace AppHub
 				}
 			}
 		}
+		private async void btnRenameAppOnClick(object sender, RoutedEventArgs e)
+		{
+			var button = sender as Button;
+			if (button != null)
+			{
+				string appPath = button.Tag as string;
+				var appToRename = appList.FirstOrDefault(a => a.AppPath == appPath);
+				if (appToRename != null)
+				{
+					var inputTextBox = new TextBox { Text = appToRename.AppName };
+
+					var dialog = new ContentDialog
+					{
+						Title = "Rename App",
+						Content = inputTextBox,
+						PrimaryButtonText = "Ok",
+						CloseButtonText = "Cancel",
+						XamlRoot = this.Content.XamlRoot
+					};
+
+					var result = await dialog.ShowAsync();
+
+					if (result == ContentDialogResult.Primary)
+					{
+						appToRename.AppName = inputTextBox.Text;
+						listApps.ItemsSource = null; // Refresh the list
+						listApps.ItemsSource = appList;
+						SaveAppsList();
+						MessageBox("App renamed successfully");
+					}
+				}
+			}
+		}
+		private async void MessageBox(string message)
+		{
+			var dialog = new ContentDialog
+			{
+				Title = "Notification",
+				Content = message,
+				CloseButtonText = "Ok",
+				XamlRoot = this.Content.XamlRoot
+			};
+
+			await dialog.ShowAsync();
+		}
+		private void LoadAppsList()
+		{
+			string folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DAPPS");
+			string filePath = Path.Combine(folderPath, "apps.json");
+
+			if (Directory.Exists(folderPath) && File.Exists(filePath))
+			{
+				string json = File.ReadAllText(filePath);
+				appList = System.Text.Json.JsonSerializer.Deserialize<List<AppModel>>(json) ?? new List<AppModel>();
 
 
+				foreach (var app in appList)
+				{
+					if (string.IsNullOrEmpty(app.AppIcon))
+					{
+						app.AppIcon = "Assets/default_icon.png";
+					}
+				}
+			}
+			else
+			{
+				Directory.CreateDirectory(folderPath);
+			}
+			listApps.ItemsSource = null;
+			listApps.ItemsSource = appList;
+		}
+		private void SaveAppsList()
+		{
+			string folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DAPPS");
+			string filePath = Path.Combine(folderPath, "apps.json");
+
+			if (!Directory.Exists(folderPath))
+			{
+				Directory.CreateDirectory(folderPath);
+			}
+
+			string json = System.Text.Json.JsonSerializer.Serialize(appList, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+			File.WriteAllText(filePath, json);
+		}
+		private async Task<string> AddAppIconAsync()
+		{
+			var iconPicker = new FileOpenPicker();
+			InitializeWithWindow(iconPicker);
+			iconPicker.ViewMode = PickerViewMode.Thumbnail;
+			iconPicker.SuggestedStartLocation = PickerLocationId.PicturesLibrary;
+			iconPicker.FileTypeFilter.Add(".png");
+			iconPicker.FileTypeFilter.Add(".jpg");
+			iconPicker.FileTypeFilter.Add(".jpeg");
+
+			StorageFile iconFile = await iconPicker.PickSingleFileAsync();
+
+			if (iconFile != null)
+			{
+				string folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DAPPS", "AppIcons");
+				if (!Directory.Exists(folderPath))
+				{
+					Directory.CreateDirectory(folderPath);
+				}
+
+				string destinationPath = Path.Combine(folderPath, iconFile.Name);
 
 
+				try
+				{
+					using (var sourceStream = await iconFile.OpenStreamForReadAsync())
+					using (var destinationStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write))
+					{
+						await sourceStream.CopyToAsync(destinationStream);
+					}
+				}
+				catch (Exception ex)
+				{
+					MessageBox($"Error copying the icon file {ex.Message}");
+					return "Assets/default_icon.png";
+				}
 
-
+				return destinationPath;
+			}
+			return "Assets/default_icon.png";
+		}
 		private void InitializeWithWindow(FileOpenPicker filePicker)
 		{
 			// We need to initialize the FileOpenPicker with the window handle of the current window

@@ -8,12 +8,7 @@ namespace AppHub.Models
 {
 	public class AppModel
 	{
-		private string appName;
-		public string AppName
-		{
-			get => appName;
-			set => appName = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value.ToLower()); // Capitalize the first letter of the app name
-		}
+		public string AppName { get; set; }
 		public string AppPath { get; set; }
 		public string AppIcon { get; set; } = "Assets/default_icon.png";
 	}
