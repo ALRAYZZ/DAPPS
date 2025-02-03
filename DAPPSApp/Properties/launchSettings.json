@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "DAPPSApp (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "DAPPSApp (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
