@@ -52,7 +52,7 @@ namespace DAPPSApp.Utilities
 
 				return destinationPath;
 			}
-			return "Assets/default_icon.png";
+			return null;
 		}
 
 		public static void SaveAppsList(List<AppModel> appList)

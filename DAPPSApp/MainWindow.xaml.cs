@@ -12,6 +12,10 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Microsoft.UI.Windowing;
 using WinRT.Interop;
+using Microsoft.UI.Xaml.Media;
+using DAPPSApp.Views;
+using Microsoft.UI.Xaml.Input;
+using Windows.ApplicationModel.VoiceCommands;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -23,10 +27,12 @@ namespace DAPPSApp
 	/// </summary>
 	public sealed partial class MainWindow : Window
 	{
-		private List<AppModel> appList = new List<AppModel>();
+		internal static MainWindow Instance { get; private set; }
+		internal List<AppModel> appList = new List<AppModel>();
 		public MainWindow()
 		{
 			this.InitializeComponent();
+			Instance = this;
 			SetWindowSize(1200, 800);
 			LoadAppsList();
 		}
@@ -174,20 +180,42 @@ namespace DAPPSApp
 				}
 			}
 		}
-
-		private void ListApps_ItemClick(object sender, ItemClickEventArgs e)
+		private void ListApps_ItemDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
 		{
-			var clickedItem = e.ClickedItem as AppModel;
-			if (clickedItem != null)
+			var grid = sender as Grid;
+			var selectedApp = grid?.DataContext as AppModel;
+			if (selectedApp != null)
 			{
-				foreach (var app in appList)
-				{
-					app.IsSelected = false;
-				}
-				clickedItem.IsSelected = true;
+				var appDetailsWindow = new AppDetailsWindow(selectedApp, appList);
+				appDetailsWindow.AppDeleted += AppDetailsWindow_AppDeleted;
+				appDetailsWindow.Activate();
+
+				// Minimize the MainWindow
+				var hwnd = WindowNative.GetWindowHandle(this);
+				var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
+				var appWindow = AppWindow.GetFromWindowId(windowId);
+				appWindow.Hide();
 			}
 		}
+		private void AppDetailsWindow_AppDeleted(object sender, EventArgs e)
+		{
+			listApps.ItemsSource = null; // Refresh the list
+			listApps.ItemsSource = appList;
+		}
 
+		private void ListApps_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (listApps.SelectedItem != null)
+			{
+				btnLaunchApp.IsEnabled = true;
+				btnLaunchApp.Style = (Style)Application.Current.Resources["AccentButtonStyle"];
+			}
+			else
+			{
+				btnLaunchApp.IsEnabled = false;
+				btnLaunchApp.Style = (Style)Application.Current.Resources["DisabledButtonStyle"];
+			}
+		}
 		private void LoadAppsList()
 		{
 			appList = FileHelper.LoadAppsList();
