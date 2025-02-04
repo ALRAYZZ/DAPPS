@@ -16,6 +16,10 @@ using Microsoft.UI.Xaml.Media;
 using DAPPSApp.Views;
 using Microsoft.UI.Xaml.Input;
 using Windows.ApplicationModel.VoiceCommands;
+using Windows.ApplicationModel.Background;
+using Microsoft.UI.Xaml.Hosting;
+using System.Numerics;
+using Microsoft.UI.Composition;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -29,6 +33,7 @@ namespace DAPPSApp
 	{
 		internal static MainWindow Instance { get; private set; }
 		internal List<AppModel> appList = new List<AppModel>();
+		private Dictionary<UIElement, Vector3> originalOffsets = new Dictionary<UIElement, Vector3>();
 		public MainWindow()
 		{
 			this.InitializeComponent();
@@ -202,7 +207,6 @@ namespace DAPPSApp
 			listApps.ItemsSource = null; // Refresh the list
 			listApps.ItemsSource = appList;
 		}
-
 		private void ListApps_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (listApps.SelectedItem != null)
@@ -215,6 +219,43 @@ namespace DAPPSApp
 				btnLaunchApp.IsEnabled = false;
 				btnLaunchApp.Style = (Style)Application.Current.Resources["DisabledButtonStyle"];
 			}
+		}
+		private void Card_PointerEntered(object sender, PointerRoutedEventArgs e)
+		{
+			var grid = sender as Grid;
+			if (grid != null)
+			{
+				var visual = ElementCompositionPreview.GetElementVisual(grid);
+				if (!originalOffsets.ContainsKey(grid))
+				{
+					originalOffsets[grid] = visual.Offset;
+				}
+				var originalOffset = originalOffsets[grid];
+				
+				visual.StartAnimation("Offset", CreateOffsetAnimation(visual.Compositor, originalOffset + new Vector3(3, 5, 0)));
+			}
+		}
+
+		private void Card_PointerExited(object sender, PointerRoutedEventArgs e)
+		{
+			var grid = sender as Grid;
+			if (grid != null)
+			{
+				var visual = ElementCompositionPreview.GetElementVisual(grid);
+				if (originalOffsets.ContainsKey(grid))
+				{
+					var originalOffset = originalOffsets[grid];
+					visual.StartAnimation("Offset", CreateOffsetAnimation(visual.Compositor, originalOffset));
+				}
+			}
+		}
+
+		private CompositionAnimation CreateOffsetAnimation(Compositor compositor, Vector3 targetOffset)
+		{
+			var animation = compositor.CreateVector3KeyFrameAnimation();
+			animation.InsertKeyFrame(1.0f, targetOffset);
+			animation.Duration = TimeSpan.FromMilliseconds(300);
+			return animation;
 		}
 		private void LoadAppsList()
 		{

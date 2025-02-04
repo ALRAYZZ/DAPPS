@@ -10,7 +10,45 @@
     Title="DAPPSApp">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        
+        <Grid.Resources>
+            <Style TargetType="ListViewItem">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListViewItem">
+                            <Border x:Name="Border" BorderBrush="Transparent" BorderThickness="2">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Border" Storyboard.TargetProperty="BorderBrush">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="Transparent"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Selected">
+                                            <Storyboard>
+                                                <ObjectAnimationUsingKeyFrames Storyboard.TargetName="Border" Storyboard.TargetProperty="BorderBrush">
+                                                    <DiscreteObjectKeyFrame KeyTime="0" Value="Green"/>
+                                                </ObjectAnimationUsingKeyFrames>
+                                            </Storyboard>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Grid x:Name="ContentGrid">
+                                    <ContentPresenter/>
+                                </Grid>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </Grid.Resources>
 
         <!-- App List -->
         <ListView
@@ -36,21 +74,21 @@
                     <Grid
                         Width="200"
                         Height="250"
-                        Margin="10"
+                        Margin="5"
                         Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
                         CornerRadius="8"
-                        Padding="10"
-                        DoubleTapped="ListApps_ItemDoubleTapped">
+                        Padding="0"
+                        DoubleTapped="ListApps_ItemDoubleTapped"
+                        PointerEntered="Card_PointerEntered"
+                        PointerExited="Card_PointerExited">
 
                         <!-- App Icon -->
                         <Image
                             Source="{Binding AppIcon}"
                             Stretch="UniformToFill"
-                            VerticalAlignment="Top"
-                            HorizontalAlignment="Center"
-                            Width="150"
-                            Height="150"
-                            Margin="0,10,0,0"/>
+                            VerticalAlignment="Stretch"
+                            HorizontalAlignment="Stretch"
+                            Margin="0"/>
 
                         <!-- App Name -->
                         <TextBlock
@@ -61,15 +99,6 @@
                             FontWeight="SemiBold"
                             Margin="0,0,0,10"
                             Foreground="{ThemeResource TextFillColorPrimaryBrush}"/>
-                        <!--Action Panel-->
-                        <Grid x:Name="actionPanel" Visibility="Collapsed" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="5" Margin="0, 10, 0, 0">
-                            <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="5">
-                                <Button Content="Launch" Click="btnLaunchAppOnClick" Tag="{Binding AppPath}" Style="{StaticResource AccentButtonStyle}"/>
-                                <Button Content="Change Icon" Click="btnAddChangeIconOnClick" Tag="{Binding AppPath}" Style="{StaticResource DefaultButtonStyle}"/>
-                                <Button Content="Rename" Click="btnRenameAppOnClick" Tag="{Binding AppPath}" Style="{StaticResource DefaultButtonStyle}"/>
-                                <Button Content="Delete" Click="btnDeleteAppOnClick" Tag="{Binding AppPath}" Style="{StaticResource DangerButtonStyle}"/>
-                            </StackPanel>
-                        </Grid>
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -82,3 +111,5 @@
         </StackPanel>
     </Grid>
 </Window>
+
+
