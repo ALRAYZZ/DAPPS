@@ -8,6 +8,16 @@
     Title="App Details">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" >
+        <Grid.Resources>
+            <!-- Custom Style for Close App Button -->
+            <Style x:Key="DeleteAppButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                <!-- Override the Background property -->
+                <Setter Property="Background" Value="Red" />
+
+                <!-- Optional: Override Foreground for better contrast -->
+                <Setter Property="Foreground" Value="White" />
+            </Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -26,7 +36,7 @@
             <Button Content="Launch" Click="btnLaunchAppOnClick" Style="{StaticResource AccentButtonStyle}" Width="200"/>
             <Button Content="Change Icon" Click="btnAddChangeIconOnClick" Style="{StaticResource DefaultButtonStyle}" Width="200"/>
             <Button Content="Rename" Click="btnRenameAppOnClick" Style="{StaticResource DefaultButtonStyle}" Width="200"/>
-            <Button Content="Delete" Click="btnDeleteAppOnClick" Style="{StaticResource DangerButtonStyle}" Width="200"/>
+            <Button Content="Delete" Click="btnDeleteAppOnClick" Style="{StaticResource DeleteAppButtonStyle}" Width="200"/>
         </StackPanel>
     </Grid>
 </Window>

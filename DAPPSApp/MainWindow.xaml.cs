@@ -20,6 +20,7 @@ using Windows.ApplicationModel.Background;
 using Microsoft.UI.Xaml.Hosting;
 using System.Numerics;
 using Microsoft.UI.Composition;
+using System.Threading.Tasks.Sources;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -43,7 +44,7 @@ namespace DAPPSApp
 			LoadAppsList();
 
 			timer = new DispatcherTimer();
-			timer.Interval = TimeSpan.FromSeconds(5);
+			timer.Interval = TimeSpan.FromSeconds(1);
 			timer.Tick += Timer_Tick;
 			timer.Start();
 		}
@@ -231,12 +232,10 @@ namespace DAPPSApp
 		{
 			if (listApps.SelectedItem != null)
 			{
-				btnLaunchApp.IsEnabled = true;
-				btnLaunchApp.Style = (Style)Application.Current.Resources["AccentButtonStyle"];
-
 				var selectedApp = (AppModel)listApps.SelectedItem;
+
+				btnLaunchApp.IsEnabled = true;
 				btnCloseApp.IsEnabled = selectedApp.IsRunning;
-				btnCloseApp.Style = selectedApp.IsRunning ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DisabledButtonStyle"];
 
 				var listViewItem = (ListViewItem)listApps.ContainerFromItem(selectedApp);
 				if (listViewItem != null)
@@ -249,15 +248,12 @@ namespace DAPPSApp
 					{
 						VisualStateManager.GoToState(listViewItem, "Selected", true);
 					}
-					
 				}
 			}
 			else
 			{
 				btnLaunchApp.IsEnabled = false;
-				btnLaunchApp.Style = (Style)Application.Current.Resources["DisabledButtonStyle"];
 				btnCloseApp.IsEnabled = false;
-				btnCloseApp.Style = (Style)Application.Current.Resources["DisabledButtonStyle"];
 			}
 		}
 		private void Card_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -271,7 +267,7 @@ namespace DAPPSApp
 					originalOffsets[grid] = visual.Offset;
 				}
 				var originalOffset = originalOffsets[grid];
-				
+
 				visual.StartAnimation("Offset", CreateOffsetAnimation(visual.Compositor, originalOffset + new Vector3(3, 5, 0)));
 			}
 		}
@@ -292,7 +288,7 @@ namespace DAPPSApp
 		{
 			var animation = compositor.CreateVector3KeyFrameAnimation();
 			animation.InsertKeyFrame(1.0f, targetOffset);
-			animation.Duration = TimeSpan.FromMilliseconds(300);
+			animation.Duration = TimeSpan.FromMilliseconds(500);
 			return animation;
 		}
 		private void CheckRunningApps()

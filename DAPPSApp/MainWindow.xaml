@@ -77,12 +77,20 @@
                     </Setter.Value>
                 </Setter>
             </Style>
-        </Grid.Resources>
+            <!-- Custom Style for Close App Button -->
+            <Style x:Key="CloseAppButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+                <!-- Override the Background property -->
+                <Setter Property="Background" Value="Red" />
 
+                <!-- Optional: Override Foreground for better contrast -->
+                <Setter Property="Foreground" Value="White" />
+            </Style>
+        </Grid.Resources>
+        
         <!-- App List -->
         <ListView
             x:Name="listApps"
-            Margin="10"
+            Margin="50"
             SelectionMode="Single"
             IsItemClickEnabled="True"
             SelectionChanged="ListApps_SelectionChanged"
@@ -115,8 +123,8 @@
                         <Image
                             Source="{Binding AppIcon}"
                             Stretch="UniformToFill"
-                            VerticalAlignment="Stretch"
-                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
                             Margin="0"/>
 
                         <!-- App Name -->
@@ -135,9 +143,9 @@
 
         <!-- Bottom Bar -->
         <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="10">
-            <Button x:Name="btnAddApp" Content="Add App" Click="btnAddAppOnClick" Margin="0, 0, 10, 0" VerticalAlignment="Center" Style="{StaticResource AccentButtonStyle}"/>
+            <Button x:Name="btnAddApp" Content="Add App" Click="btnAddAppOnClick" Margin="0, 0, 20, 0" VerticalAlignment="Center" Style="{StaticResource AccentButtonStyle}"/>
             <Button x:Name="btnLaunchApp" Content="Launch App" Click="btnLaunchAppOnClick" Margin="10, 0, 0, 0" VerticalAlignment="Center" Style="{StaticResource AccentButtonStyle}" IsEnabled="False"/>
-            <Button x:Name="btnCloseApp" Content="Close App" Click="btnCloseAppOnClick" Margin="10, 0, 0, 0" VerticalAlignment="Center" Style="{StaticResource AccentButtonStyle}" IsEnabled="False"/>
+            <Button x:Name="btnCloseApp" Content="Close App" Click="btnCloseAppOnClick" Margin="10, 0, 0, 0" VerticalAlignment="Center" Style="{StaticResource CloseAppButtonStyle}" IsEnabled="False"/>
         </StackPanel>
     </Grid>
 </Window>
