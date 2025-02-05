@@ -214,12 +214,23 @@ namespace DAPPSApp
 			{
 				var appDetailsWindow = new AppDetailsWindow(selectedApp, appList);
 				appDetailsWindow.AppDeleted += AppDetailsWindow_AppDeleted;
-				appDetailsWindow.Activate();
 
-				// Minimize the MainWindow
+				// Get the position of the MainWindow
 				var hwnd = WindowNative.GetWindowHandle(this);
 				var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
 				var appWindow = AppWindow.GetFromWindowId(windowId);
+				var mainWindowPosition = appWindow.Position;
+
+				// Set the position of the AppDetailsWindow to the same position as the MainWindow
+				var appDetailsHwnd = WindowNative.GetWindowHandle(appDetailsWindow);
+				var appDetailsWindowId = Win32Interop.GetWindowIdFromWindow(appDetailsHwnd);
+				var appDetailsAppWindow = AppWindow.GetFromWindowId(appDetailsWindowId);
+				appDetailsAppWindow.Move(mainWindowPosition);
+
+
+				appDetailsWindow.Activate();
+
+				// Minimize the MainWindow
 				appWindow.Hide();
 			}
 		}
