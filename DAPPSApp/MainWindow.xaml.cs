@@ -31,6 +31,7 @@ namespace DAPPSApp
 	/// </summary>
 	public sealed partial class MainWindow : Window
 	{
+		private DispatcherTimer timer;
 		internal static MainWindow Instance { get; private set; }
 		internal List<AppModel> appList = new List<AppModel>();
 		private Dictionary<UIElement, Vector3> originalOffsets = new Dictionary<UIElement, Vector3>();
@@ -40,6 +41,15 @@ namespace DAPPSApp
 			Instance = this;
 			SetWindowSize(1200, 800);
 			LoadAppsList();
+
+			timer = new DispatcherTimer();
+			timer.Interval = TimeSpan.FromSeconds(5);
+			timer.Tick += Timer_Tick;
+			timer.Start();
+		}
+		private void Timer_Tick(object sender, object e)
+		{
+			CheckRunningApps();
 		}
 		private void SetWindowSize(int width, int height)
 		{
@@ -185,6 +195,16 @@ namespace DAPPSApp
 				}
 			}
 		}
+		private void btnCloseAppOnClick(object sender, RoutedEventArgs e)
+		{
+			if (listApps.SelectedItem != null)
+			{
+				var selectedApp = (AppModel)listApps.SelectedItem;
+				CloseApp(selectedApp);
+				btnCloseApp.IsEnabled = false;
+				btnCloseApp.Style = (Style)Application.Current.Resources["DisabledButtonStyle"];
+			}
+		}
 		private void ListApps_ItemDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
 		{
 			var grid = sender as Grid;
@@ -213,11 +233,31 @@ namespace DAPPSApp
 			{
 				btnLaunchApp.IsEnabled = true;
 				btnLaunchApp.Style = (Style)Application.Current.Resources["AccentButtonStyle"];
+
+				var selectedApp = (AppModel)listApps.SelectedItem;
+				btnCloseApp.IsEnabled = selectedApp.IsRunning;
+				btnCloseApp.Style = selectedApp.IsRunning ? (Style)Application.Current.Resources["AccentButtonStyle"] : (Style)Application.Current.Resources["DisabledButtonStyle"];
+
+				var listViewItem = (ListViewItem)listApps.ContainerFromItem(selectedApp);
+				if (listViewItem != null)
+				{
+					if (selectedApp.IsRunning)
+					{
+						VisualStateManager.GoToState(listViewItem, "SelectedRunning", true);
+					}
+					else
+					{
+						VisualStateManager.GoToState(listViewItem, "Selected", true);
+					}
+					
+				}
 			}
 			else
 			{
 				btnLaunchApp.IsEnabled = false;
 				btnLaunchApp.Style = (Style)Application.Current.Resources["DisabledButtonStyle"];
+				btnCloseApp.IsEnabled = false;
+				btnCloseApp.Style = (Style)Application.Current.Resources["DisabledButtonStyle"];
 			}
 		}
 		private void Card_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -235,7 +275,6 @@ namespace DAPPSApp
 				visual.StartAnimation("Offset", CreateOffsetAnimation(visual.Compositor, originalOffset + new Vector3(3, 5, 0)));
 			}
 		}
-
 		private void Card_PointerExited(object sender, PointerRoutedEventArgs e)
 		{
 			var grid = sender as Grid;
@@ -249,13 +288,62 @@ namespace DAPPSApp
 				}
 			}
 		}
-
 		private CompositionAnimation CreateOffsetAnimation(Compositor compositor, Vector3 targetOffset)
 		{
 			var animation = compositor.CreateVector3KeyFrameAnimation();
 			animation.InsertKeyFrame(1.0f, targetOffset);
 			animation.Duration = TimeSpan.FromMilliseconds(300);
 			return animation;
+		}
+		private void CheckRunningApps()
+		{
+			foreach (var app in appList)
+			{
+				app.IsRunning = IsAppRunning(app.AppPath);
+				var listViewItem = (ListViewItem)listApps.ContainerFromItem(app);
+				if (listViewItem != null)
+				{
+					if (app.IsRunning)
+					{
+						if (listApps.SelectedItem == app)
+						{
+							VisualStateManager.GoToState(listViewItem, "SelectedRunning", true);
+						}
+						else
+						{
+							VisualStateManager.GoToState(listViewItem, "Running", true);
+						}
+						
+					}
+					else
+					{
+						if (listApps.SelectedItem == app)
+						{
+							VisualStateManager.GoToState(listViewItem, "Selected", true);
+						}
+						else
+						{
+							VisualStateManager.GoToState(listViewItem, "Normal", true);
+						}
+
+					}
+				}
+			}
+		}
+		private bool IsAppRunning(string appPath)
+		{
+			string appName = Path.GetFileNameWithoutExtension(appPath);
+			return Process.GetProcessesByName(appName).Any();
+		}
+		private void CloseApp(AppModel app)
+		{
+			string appName = Path.GetFileNameWithoutExtension(app.AppPath);
+			var processes = Process.GetProcessesByName(appName);
+			foreach (var process in processes)
+			{
+				process.Kill();
+			}
+			app.IsRunning = false;
 		}
 		private void LoadAppsList()
 		{

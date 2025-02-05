@@ -13,6 +13,7 @@ namespace DAPPSApp.Models
 		private string appPath;
 		private string appIcon = "Assets/default_icon.png";
 		private bool isSelected;
+		private bool isRunning;
 
 		public string AppName
 		{
@@ -62,6 +63,18 @@ namespace DAPPSApp.Models
 				{
 					isSelected = value;
 					OnPropertyChanged(nameof(IsSelected));
+				}
+			}
+		}
+		public bool IsRunning
+		{
+			get => isRunning;
+			set
+			{
+				if (isRunning != value)
+				{
+					isRunning = value;
+					OnPropertyChanged(nameof(IsRunning));
 				}
 			}
 		}

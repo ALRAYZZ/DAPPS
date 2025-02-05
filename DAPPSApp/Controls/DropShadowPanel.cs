@@ -168,9 +168,8 @@ namespace DAPPSApp.Controls
 				panel.UpdateShadow();
 			}
 		}
-
-		#endregion
 	}
 }
 
 
+#endregion
