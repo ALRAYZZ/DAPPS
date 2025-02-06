@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DAPPSApp.Models
 {
-	public class AppModel : INotifyPropertyChanged
+	public partial class AppModel : INotifyPropertyChanged
 	{
-		private string appName;
-		private string appPath;
+		private string appName = string.Empty;
+		private string appPath = string.Empty;
 		private string appIcon = "Assets/default_icon.png";
 		private bool isSelected;
 		private bool isRunning;
@@ -79,7 +80,7 @@ namespace DAPPSApp.Models
 			}
 		}
 
-		public event PropertyChangedEventHandler PropertyChanged;
+		public event PropertyChangedEventHandler? PropertyChanged;
 
 		protected void OnPropertyChanged(string propertyName)
 		{

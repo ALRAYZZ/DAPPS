@@ -33,7 +33,7 @@ namespace DAPPSApp
 	public sealed partial class MainWindow : Window
 	{
 		private DispatcherTimer timer;
-		internal static MainWindow Instance { get; private set; }
+		internal static MainWindow? Instance { get; private set; }
 		internal List<AppModel> appList = new List<AppModel>();
 		private Dictionary<UIElement, Vector3> originalOffsets = new Dictionary<UIElement, Vector3>();
 		public MainWindow()
@@ -48,7 +48,7 @@ namespace DAPPSApp
 			timer.Tick += Timer_Tick;
 			timer.Start();
 		}
-		private void Timer_Tick(object sender, object e)
+		private void Timer_Tick(object? sender, object e)
 		{
 			CheckRunningApps();
 		}
@@ -79,15 +79,22 @@ namespace DAPPSApp
 
 				if (!appList.Any(a => a.AppPath == appPath))
 				{
-					string appIcon = await DialogHelper.GetAppIconAsync(this);
+					string? appIcon = await DialogHelper.GetAppIconAsync(this);
 
+					if (!string.IsNullOrEmpty(appIcon))
+					{
+						var app = new AppModel { AppName = appName, AppPath = appPath, AppIcon = appIcon };
+						appList.Add(app);
+						listApps.ItemsSource = null; // Refresh the list
+						listApps.ItemsSource = appList;
+						await DialogHelper.ShowMessageBoxAsync(this, "App added successfully");
+						FileHelper.SaveAppsList(appList);
+					}
+					else
+					{
+						await DialogHelper.ShowMessageBoxAsync(this, "No icon selected");
+					}
 
-					var app = new AppModel { AppName = appName, AppPath = appPath, AppIcon = appIcon };
-					appList.Add(app);
-					listApps.ItemsSource = null; // Refresh the list
-					listApps.ItemsSource = appList;
-					await DialogHelper.ShowMessageBoxAsync(this, "App added successfully");
-					FileHelper.SaveAppsList(appList);
 				}
 				else
 				{
@@ -132,16 +139,27 @@ namespace DAPPSApp
 			var button = sender as Button;
 			if (button != null)
 			{
-				string appPath = button.Tag as string; // This works because on the XAML we set the Tag property of the button to the app path Tag="{Binding AppPath}
-				var appToUpdate = appList.FirstOrDefault(a => a.AppPath == appPath);
-				if (appToUpdate != null)
+				string? appPath = button.Tag as string; // This works because on the XAML we set the Tag property of the button to the app path Tag="{Binding AppPath}
+				if (!string.IsNullOrEmpty(appPath))
 				{
-					string newIconPath = await FileHelper.AddAppIconAsync(this);
-					appToUpdate.AppIcon = newIconPath;
-					listApps.ItemsSource = null; // Refresh the list
-					listApps.ItemsSource = appList;
-					FileHelper.SaveAppsList(appList);
-					await DialogHelper.ShowMessageBoxAsync(this, "App icon updated successfully");
+					var appToUpdate = appList.FirstOrDefault(a => a.AppPath == appPath);
+					if (appToUpdate != null)
+					{
+						string? newIconPath = await FileHelper.AddAppIconAsync(this);
+						appToUpdate.AppIcon = newIconPath ?? appToUpdate.AppIcon;
+						listApps.ItemsSource = null; // Refresh the list
+						listApps.ItemsSource = appList;
+						FileHelper.SaveAppsList(appList);
+						await DialogHelper.ShowMessageBoxAsync(this, "App icon updated successfully");
+					}
+					else
+					{
+						await DialogHelper.ShowMessageBoxAsync(this, "No app found with specified path.");
+					}
+				}
+				else
+				{
+					await DialogHelper.ShowMessageBoxAsync(this, "Invalid app path.");
 				}
 			}
 		}
@@ -150,17 +168,29 @@ namespace DAPPSApp
 			var button = sender as Button;
 			if (button != null)
 			{
-				string appPath = button.Tag as string;
-				var appToRemove = appList.FirstOrDefault(a => a.AppPath == appPath);
-				if (appToRemove != null)
+				string? appPath = button.Tag as string;
+				if (!string.IsNullOrEmpty(appPath))
 				{
-					FileHelper.DeleteAppIcon(appToRemove.AppIcon);
-					appList.Remove(appToRemove);
-					listApps.ItemsSource = null; // Refresh the list
-					listApps.ItemsSource = appList;
-					FileHelper.SaveAppsList(appList);
-					await DialogHelper.ShowMessageBoxAsync(this, "App removed successfully");
+					var appToRemove = appList.FirstOrDefault(a => a.AppPath == appPath);
+					if (appToRemove != null)
+					{
+						FileHelper.DeleteAppIcon(appToRemove.AppIcon);
+						appList.Remove(appToRemove);
+						listApps.ItemsSource = null; // Refresh the list
+						listApps.ItemsSource = appList;
+						FileHelper.SaveAppsList(appList);
+						await DialogHelper.ShowMessageBoxAsync(this, "App removed successfully");
+					}
+					else
+					{
+						await DialogHelper.ShowMessageBoxAsync(this, "No app found with specified path.");
+					}
 				}
+				else
+				{
+					await DialogHelper.ShowMessageBoxAsync(this, "Invalid app path.");
+				}
+
 			}
 		}
 		private async void btnRenameAppOnClick(object sender, RoutedEventArgs e)
@@ -168,32 +198,44 @@ namespace DAPPSApp
 			var button = sender as Button;
 			if (button != null)
 			{
-				string appPath = button.Tag as string;
-				var appToRename = appList.FirstOrDefault(a => a.AppPath == appPath);
-				if (appToRename != null)
+				string? appPath = button.Tag as string;
+				if (!string.IsNullOrEmpty(appPath))
 				{
-					var inputTextBox = new TextBox { Text = appToRename.AppName };
-
-					var dialog = new ContentDialog
+					var appToRename = appList.FirstOrDefault(a => a.AppPath == appPath);
+					if (appToRename != null)
 					{
-						Title = "Rename App",
-						Content = inputTextBox,
-						PrimaryButtonText = "Ok",
-						CloseButtonText = "Cancel",
-						XamlRoot = this.Content.XamlRoot
-					};
+						var inputTextBox = new TextBox { Text = appToRename.AppName };
 
-					var result = await dialog.ShowAsync();
+						var dialog = new ContentDialog
+						{
+							Title = "Rename App",
+							Content = inputTextBox,
+							PrimaryButtonText = "Ok",
+							CloseButtonText = "Cancel",
+							XamlRoot = this.Content.XamlRoot
+						};
 
-					if (result == ContentDialogResult.Primary)
+						var result = await dialog.ShowAsync();
+
+						if (result == ContentDialogResult.Primary)
+						{
+							appToRename.AppName = inputTextBox.Text;
+							listApps.ItemsSource = null; // Refresh the list
+							listApps.ItemsSource = appList;
+							FileHelper.SaveAppsList(appList);
+							await DialogHelper.ShowMessageBoxAsync(this, "App renamed successfully");
+						}
+					}
+					else
 					{
-						appToRename.AppName = inputTextBox.Text;
-						listApps.ItemsSource = null; // Refresh the list
-						listApps.ItemsSource = appList;
-						FileHelper.SaveAppsList(appList);
-						await DialogHelper.ShowMessageBoxAsync(this, "App renamed successfully");
+						await DialogHelper.ShowMessageBoxAsync(this, "No app found with specified path.");
 					}
 				}
+				else
+				{
+					await DialogHelper.ShowMessageBoxAsync(this, "Invalid app path.");
+				}
+
 			}
 		}
 		private void btnCloseAppOnClick(object sender, RoutedEventArgs e)
@@ -213,7 +255,7 @@ namespace DAPPSApp
 			if (selectedApp != null)
 			{
 				var appDetailsWindow = new AppDetailsWindow(selectedApp, appList);
-				appDetailsWindow.AppDeleted += AppDetailsWindow_AppDeleted;
+				appDetailsWindow.AppDeleted += AppDetailsWindow_AppDeleted!;
 
 				// Get the position of the MainWindow
 				var hwnd = WindowNative.GetWindowHandle(this);

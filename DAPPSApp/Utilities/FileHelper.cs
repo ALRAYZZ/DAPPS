@@ -10,12 +10,24 @@ using System.Threading.Tasks;
 using Windows.Storage.Pickers;
 using Windows.Storage;
 using WinRT.Interop;
+using System.Text.Json.Serialization.Metadata;
 
 namespace DAPPSApp.Utilities
 {
 	public static class FileHelper
 	{
-		public static async Task<string> AddAppIconAsync(Window window)
+		private static readonly JsonSerializerOptions JsonSerializerOptions;
+		
+		static FileHelper()
+		{
+			JsonSerializerOptions = new JsonSerializerOptions()
+			{
+				WriteIndented = true,
+				TypeInfoResolver = AppModelContext.Default
+			};
+		}
+
+		public static async Task<string?> AddAppIconAsync(Window window)
 		{
 			var iconPicker = new FileOpenPicker();
 			InitializeWithWindow(iconPicker, window);
@@ -65,7 +77,8 @@ namespace DAPPSApp.Utilities
 				Directory.CreateDirectory(folderPath);
 			}
 
-			string json = JsonSerializer.Serialize(appList, new JsonSerializerOptions { WriteIndented = true });
+			string json = JsonSerializer.Serialize(appList, JsonSerializerOptions);
+
 			File.WriteAllText(filePath, json);
 		}
 
@@ -77,7 +90,8 @@ namespace DAPPSApp.Utilities
 			if (Directory.Exists(folderPath) && File.Exists(filePath))
 			{
 				string json = File.ReadAllText(filePath);
-				return JsonSerializer.Deserialize<List<AppModel>>(json) ?? new List<AppModel>();
+
+				return JsonSerializer.Deserialize<List<AppModel>>(json, JsonSerializerOptions) ?? new List<AppModel>();
 
 			}
 			else

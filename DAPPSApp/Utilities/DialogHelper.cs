@@ -31,7 +31,7 @@ namespace DAPPSApp.Utilities
 			return defaultAppName;
 		}
 
-		public static async Task<string> GetAppIconAsync(Window window)
+		public static async Task<string?> GetAppIconAsync(Window window)
 		{
 			var dialog = new ContentDialog()
 			{

@@ -17,7 +17,7 @@ namespace DAPPSApp.Views
 		private AppModel app;
 		private List<AppModel> appList;
 
-		public event EventHandler AppDeleted;
+		public event EventHandler<EventArgs> AppDeleted = (_, _) => { };
 
 		public AppDetailsWindow(AppModel app, List<AppModel> appList)
 		{
@@ -63,7 +63,7 @@ namespace DAPPSApp.Views
 
 		private async void btnAddChangeIconOnClick(object sender, RoutedEventArgs e)
 		{
-			string newIconPath = await FileHelper.AddAppIconAsync(this);
+			string? newIconPath = await FileHelper.AddAppIconAsync(this);
 			if (!string.IsNullOrEmpty(newIconPath))
 			{
 				app.AppIcon = newIconPath;
@@ -111,7 +111,7 @@ namespace DAPPSApp.Views
 			this.Close();
 		}
 
-		private void btnLibraryOnClick(object sender, RoutedEventArgs e)
+		private void btnLibraryOnClick(object? sender, RoutedEventArgs? e)
 		{
 			var mainWindow = MainWindow.Instance;
 			if (mainWindow != null)

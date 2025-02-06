@@ -15,5 +15,14 @@
     <windowsSettings>
       <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
     </windowsSettings>
+	<visualElements xmlns="http://schemas.microsoft.com/developer/appx/2015/manifest"
+        displayName="DAPPS"
+        description="DAPPS Application"
+	    logo="Assets\Square150x150Logo.png"
+        square150x150Logo="Assets\Square150x150Logo.png"
+        square44x44Logo="Assets\Square44x44Logo.png"
+        splashScreenImage="Assets\SplashScreen.png"
+        foregroundText="light"
+        backgroundColor="#FFFFFF"/>
   </application>
 </assembly>

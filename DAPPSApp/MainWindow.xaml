@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="using:DAPPSApp.Controls"
     mc:Ignorable="d"
-    Title="DAPPSApp">
+    Title="DAPPS">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.Resources>

@@ -1,0 +1,23 @@
+﻿<Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
+	<Application>
+		<!-- Preserve WebView2 -->
+		<Assembly Name="Microsoft.Web.WebView2.Core.Projection">
+			<Type Name="*" Dynamic="Required All" />
+		</Assembly>
+
+		<!-- Preserve System.Net.Primitives -->
+		<Assembly Name="System.Net.Primitives">
+			<Type Name="*" Dynamic="Required All" />
+		</Assembly>
+
+		<!-- Preserve BinaryFormatter (if needed) -->
+		<Assembly Name="System.Runtime.Serialization.Formatters">
+			<Type Name="*" Dynamic="Required All" />
+		</Assembly>
+
+		<!-- Preserve COM Interop (if needed) -->
+		<Assembly Name="Internal.Runtime.InteropServices">
+			<Type Name="*" Dynamic="Required All" />
+		</Assembly>
+	</Application>
+</Directives>
